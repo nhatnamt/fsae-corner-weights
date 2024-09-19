@@ -1,4 +1,5 @@
-import re
+import os
+import sys
 
 import serial
 from nicegui import app, run, ui
@@ -11,16 +12,6 @@ from cog_viewer import CogViewer
 def get_available_ports():
     return [port.device for port in list_ports.comports()]
 
-
-# Adjusted regex pattern to handle variable spaces and optional newlines
-pattern = re.compile(
-    r"""
-    Car\ total\ weight\ \(kg\):\s*(?P<car_weight>\d+\.\d+)\s*
-    FR:\s*(?P<fr_weight>\d+\.\d+)\s*FL:\s*(?P<fl_weight>\d+\.\d+)\s*
-    RR:\s*(?P<rr_weight>\d+\.\d+)\s*RL:\s*(?P<rl_weight>\d+\.\d+)\s*
-    Front/Rear\ ratio:\s*(?P<front_ratio>\d+\.\d+)/(?P<rear_ratio>\d+\.\d+)\s*
-    Left/Right\ ratio:\s*(?P<left_ratio>\d+\.\d+)/(?P<right_ratio>\d+\.\d+)
-""", re.VERBOSE)
 
 # ---------------------------------------------------------------------------- #
 #                                 UI Components                                #
@@ -192,7 +183,11 @@ async def handle_click():
 connect_button.on('click', handle_click)
 disconnect_button.on('click', lambda: port and port.close())
 
-app.add_static_files('/assets', 'assets')
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    os.chdir(sys._MEIPASS)
+
+assets = os.path.join(os.path.dirname(__file__), 'assets')
+app.add_static_files('/assets', assets)
 app.on_shutdown(lambda: port and port.close())
 app.native.window_args['maximized'] = True
 app.native.window_args['resizable'] = False
